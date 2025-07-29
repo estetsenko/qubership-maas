@@ -60,7 +60,6 @@ jobs:
               }
             ]
           platforms: linux/amd64,linux/arm64
-
       - name: Push Tag
         uses: netcracker/qubership-workflow-hub/actions/tag-action@v1.0.3
         with:

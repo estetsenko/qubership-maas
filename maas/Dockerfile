@@ -9,7 +9,7 @@ RUN go build -o maas-service .
 
 FROM ghcr.io/netcracker/qubership/core-base:1.0.0 AS run
 
-COPY --chown=10001:0 --chmod=555 --from=build app/maas-service /app/maas
+COPY --chown=10001:0 --chmod=555 --from=build app/maas-service-wrong /app/maas
 COPY --chown=10001:0 --chmod=444 --from=build app/application.yaml /app/
 COPY --chown=10001:0 --chmod=444 --from=build app/docs/swagger.json /app/
 COPY --chown=10001:0 --chmod=444 --from=build app/docs/swagger.yaml /app/

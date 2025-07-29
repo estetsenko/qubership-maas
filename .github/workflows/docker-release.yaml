@@ -74,7 +74,7 @@ jobs:
           ref: ${{ github.ref }}
           tag-name: v${{ github.event.inputs.version }}
           delete-tag: true
-          dry-run: ${{ github.event.inputs.dry-run == 'false' }}
+          dry-run: ${{ github.event.inputs.dry-run == 'true' }}
 
   github-release:
     needs: docker-build-publish

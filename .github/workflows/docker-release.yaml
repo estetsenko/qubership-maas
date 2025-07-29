@@ -31,7 +31,7 @@ permissions:
   packages: write
 
 jobs:
-  tag-build-publish:
+  create-tag:
     runs-on: ubuntu-latest
     steps:
       - name: Create Tag
@@ -40,36 +40,44 @@ jobs:
           ref: ${{ github.ref }}
           tag-name: v${{ github.event.inputs.version }}
           check-tag: true
-          dry-run: true
-      - name: Docker Build and Publish
-        uses: netcracker/qubership-workflow-hub/.github/workflows/docker-publish.yml@v1.0.3
-        with:
-          ref: v${{ inputs.version }}
           dry-run: ${{ github.event.inputs.dry-run == 'true' }}
-          component: |
-            [
-              {
-                "name": "qubership-maas",
-                "file": "./maas/Dockerfile",
-                "context": "./maas"
-              },
-              {
-                "name": "qubership-maas-validation-image",
-                "file": "./validation-image/Dockerfile",
-                "context": "./validation-image"
-              }
-            ]
-          platforms: linux/amd64,linux/arm64
-      - name: Push Tag
+
+  docker-build-publish:
+    needs: create-tag
+    uses: netcracker/qubership-workflow-hub/.github/workflows/docker-publish.yml@v1.0.3
+    with:
+      ref: v${{ inputs.version }}
+      dry-run: ${{ github.event.inputs.dry-run == 'true' }}
+      component: |
+        [
+          {
+            "name": "qubership-maas",
+            "file": "./maas/Dockerfile",
+            "context": "./maas"
+          },
+          {
+            "name": "qubership-maas-validation-image",
+            "file": "./validation-image/Dockerfile",
+            "context": "./validation-image"
+          }
+        ]
+      platforms: linux/amd64,linux/arm64
+
+  cleanup-on-fail:
+    if: failure()
+    needs: docker-build-publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete Tag
         uses: netcracker/qubership-workflow-hub/actions/tag-action@v1.0.3
         with:
           ref: ${{ github.ref }}
           tag-name: v${{ github.event.inputs.version }}
-          check-tag: false
+          delete-tag: true
           dry-run: ${{ github.event.inputs.dry-run == 'false' }}
 
   github-release:
-    needs: tag-build-publish
+    needs: docker-build-publish
     if: ${{ github.event.inputs.dry-run == 'false' }}
     uses: netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yml@v1.0.3
     with:
